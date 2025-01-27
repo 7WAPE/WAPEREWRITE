@@ -1,19 +1,44 @@
-local function vapeGithubRequest(scripturl)
-	if not isfile("vape/"..scripturl) then
-		local suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7WAPE/WAPEREWRITE/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
-		if not suc or res == "404: Not Found" then return nil end
-		if scripturl:find(".lua") then res = "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..res end
-		writefile("vape/"..scripturl, res)
+--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
+local vape = shared.vape
+local loadstring = function(...)
+	local res, err = loadstring(...)
+	if err and vape then 
+		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert') 
 	end
-	return readfile("vape/"..scripturl)
+	return res
+end
+local isfile = isfile or function(file)
+	local suc, res = pcall(function() 
+		return readfile(file) 
+	end)
+	return suc and res ~= nil and res ~= ''
+end
+local function downloadFile(path, func)
+	if not isfile(path) then
+		local suc, res = pcall(function() 
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) 
+		end)
+		if not suc or res == '404: Not Found' then 
+			error(res) 
+		end
+		if path:find('.lua') then 
+			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res 
+		end
+		writefile(path, res)
+	end
+	return (func or readfile)(path)
 end
 
-shared.CustomSaveVape = 6872274481
-if isfile("vape/CustomModules/6872274481.lua") then
-	loadstring(readfile("vape/CustomModules/6872274481.lua"))()
+vape.Place = 6872274481
+if isfile('newvape/games/'..vape.Place..'.lua') then
+	loadstring(readfile('newvape/games/'..vape.Place..'.lua'), 'bedwars')()
 else
-	local publicrepo = vapeGithubRequest("CustomModules/6872274481.lua")
-	if publicrepo then
-		loadstring(publicrepo)()
+	if not shared.VapeDeveloper then
+		local suc, res = pcall(function() 
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/games/'..vape.Place..'.lua', true) 
+		end)
+		if suc and res ~= '404: Not Found' then
+			loadstring(downloadFile('newvape/games/'..vape.Place..'.lua'), 'bedwars')()
+		end
 	end
 end
